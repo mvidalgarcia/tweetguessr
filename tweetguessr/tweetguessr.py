@@ -13,22 +13,23 @@ with open(TWEETS_PATH) as file:
         tweet = content[randint(0, len(content)-1)]
         tweet_json = json.loads(tweet)
         name = tweet_json['user']['name']
-        print(obj.fullname_gender(name))
+        print(obj.get_gender_by_fullname(name))
 
 
 #print(data['created_at'])
 
+
+print(obj.get_gender_by_fullname('Marco Antonio Vidal García'))
 '''
-print(obj.fullname_gender('Marco Vidal García'))
-print(obj.fullname_gender('Jose Maria Gutiérrez Calleja'))
-print(obj.fullname_gender('Bienvenido Pérez'))
-print(obj.fullname_gender('Kevin José de la Rosa Pérez'))
-print(obj.fullname_gender('Fernando Móntañes'))
-print(obj.fullname_gender('saul arias tomás'))
-print(obj.fullname_gender('Jose Ramón'))
-print(obj.fullname_gender('Pepe Juan'))
+print(obj.get_gender_by_fullname('Jose Maria Gutiérrez Calleja'))
+print(obj.get_gender_by_fullname('Bienvenido Pérez'))
+print(obj.get_gender_by_fullname('Kevin José de la Rosa Pérez'))
+print(obj.get_gender_by_fullname('Fernando Móntañes'))
+print(obj.get_gender_by_fullname('Jose Ramón'))
+print(obj.get_gender_by_fullname('Pepe Juan'))
 '''
-print(obj.fullname_gender('Andrea Fernandez♥'))
+print(obj.get_gender_by_fullname('Petra Z. Ral'))
+print(obj.get_gender_by_fullname('Andrea Fernandez♥'))
 
 
 #surnames = obj.fullname_gender('Pepe')
