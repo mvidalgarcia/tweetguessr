@@ -1,6 +1,9 @@
 import os
 from util import *
 
+API_KEY = '7e4592c4251cbfeff378bb585cc60c6e'
+API_SECRET = 'DK1zSC6_vjhQL8ihl7b_h16mp-ZnEXHL'
+
 current_path = os.path.dirname(__file__)
 
 
