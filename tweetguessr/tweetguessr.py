@@ -30,6 +30,8 @@ print(obj.get_gender_by_fullname('Pepe Juan'))
 '''
 print(obj.get_gender_by_fullname('Petra Z. Ral'))
 print(obj.get_gender_by_fullname('Andrea Fernandez♥'))
+print(obj.get_gender_by_fullname('María José Fernández Andetxaga'))
+print(obj.get_gender_by_fullname('María José de la rosa perez'))
 
 
 #surnames = obj.fullname_gender('Pepe')

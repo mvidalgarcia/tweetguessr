@@ -128,11 +128,18 @@ class GenderName:
             item = fullname_list[index]
             # check if it's a valid surname
             if not cache_surname and self._add_valid_surname(item, result, surnames):
-                pass
+                index += 1
+                break
             else:
                 cache_surname.append(item)
                 if self._add_valid_surname(' '.join(cache_surname), result, surnames):
-                    cache_surname = []  # if more-than-one-word surname found, empty cache
+                    index += 1
+                    break
+        # Insert the rest of surnames whether they are real or not
+        for index in range(index, len(fullname_list)):
+            item = fullname_list[index]
+            surnames.append(item)
+
 
     def _add_valid_surname(self, word, result, surnames):
         """
@@ -143,6 +150,8 @@ class GenderName:
         """
         if len(list(filter(lambda x: word == x, self.__surnames))) > 0:
             surnames.append(word)
+            if 'gender' in result:
+                del result['gender']
             return True
         else:
             result['gender'] = 'unknown'
