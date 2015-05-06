@@ -13,8 +13,7 @@ class GenderName:
     SURNAMES_PATH = current_path + '/data/surnames_INE.data'
     NAME_SURNAME_PATH = current_path + '/data/surnames_names_INE.data'
 
-    __names, __name_surname = {}, {}
-    __surnames = []
+    __names, __surnames, __name_surname = {}, set(), {}
 
     def __init__(self):
         self._load_data()
@@ -42,7 +41,7 @@ class GenderName:
         Source: Instituto Nacional de Estadística (INE)
         """
         with open(self.SURNAMES_PATH) as file:
-            self.__surnames = [surname.rstrip() for surname in file.readlines()]
+            self.__surnames = {surname.rstrip() for surname in file.readlines()}
 
     def _load_name_surname(self):
         """
@@ -151,7 +150,7 @@ class GenderName:
         :param result: dict of results
         :return: True if it's valid surname, False if not
         """
-        if len(list(filter(lambda x: word == x, self.__surnames))) > 0:
+        if word in self.__surnames:
             surnames.append(word)
             if 'gender' in result:
                 del result['gender']
@@ -173,10 +172,10 @@ class GenderName:
         if name_confidence_male == 'unknown':
             result['gender'] = 'unknown'
             return result
-        elif float(name_confidence_male) > 0.6:
+        elif float(name_confidence_male) >= 0.5:
             result['gender'] = 'male'
             result['confidence'] = name_confidence_male
-        elif 1 - float(name_confidence_male) > 0.6:
+        elif 1 - float(name_confidence_male) > 0.5:
             result['gender'] = 'female'
             result['confidence'] = 1 - float(name_confidence_male)
         return result
