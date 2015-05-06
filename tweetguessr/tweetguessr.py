@@ -52,17 +52,16 @@ def generate_male_female_sets(face_recognition=False):
     female_full_user_tweets_dict = dict()
     with open(TWEETS_PATH) as file:
         content = file.readlines()
-        male_file, female_file = open(MALE_TABLE_PATH, 'w'), open(FEMALE_TABLE_PATH, 'w')
         count_feedback = 1  # Count to show feedback while writing
-        #for _ in range(0, 50):
-        for tweet in content:
-            #tweet = content[randint(0, len(content)-1)]
+        for _ in range(0, 50):
+        #for tweet in content:
+            tweet = content[randint(0, len(content)-1)]
             tweet_json = json.loads(tweet)
             screen_name = tweet_json['user']['screen_name']
             name = tweet_json['user']['name']
             res = obj.get_gender_by_fullname(name)
-            # lazy evaluation, if cannot get gender by name, try to get it by face recognition
             if face_recognition:
+                # lazy evaluation, if cannot get gender by name, try to get it by face recognition
                 perform_face_recognition(res, tweet_json)
             # Already have all gender results, build table
             if res['gender'] != 'unknown':
@@ -81,11 +80,36 @@ def generate_male_female_sets(face_recognition=False):
                     count_feedback += 1
                 if count_feedback % 10000 == 0:
                     print('Writing line {} ...'.format(count_feedback))
-        print(len(male_full_user_tweets_dict))
-        print(female_full_user_tweets_dict)
 
-        # Get number of tweets of each user (just for testing)
+        # Get number of tweets of each user (just for testing!)
         # _get_and_store_num_tweets(male_full_user_tweets_dict, female_full_user_tweets_dict)
+
+        male_num_users = len(male_full_user_tweets_dict)
+        female_num_users = len(female_full_user_tweets_dict)
+        test_male_len = int(male_num_users*0.2)
+        training_male_len = male_num_users - test_male_len
+        test_female_len = int(female_num_users*0.2)
+        training_female_len = female_num_users - test_female_len
+
+        print('{} = {} + {}'.format(male_num_users, training_male_len, test_male_len))
+        # Obtain fe/male test (20%) and training (80%) sets
+        male_sets = _get_test_training_sets(male_full_user_tweets_dict, test_male_len)
+        print(male_sets['test'])
+        print(male_sets['training'])
+        print('{} = {} + {}'.format(female_num_users, training_female_len, test_female_len))
+        female_sets = _get_test_training_sets(female_full_user_tweets_dict, test_female_len)
+        print(female_sets['test'])
+        print(female_sets['training'])
+
+
+def _get_test_training_sets(full_user_tweets_dict, test_len):
+    test_set = dict()
+    while len(test_set) < test_len:
+        rand_key = list(full_user_tweets_dict.keys())[randint(0, len(full_user_tweets_dict)-1)]
+        test_set[rand_key] = full_user_tweets_dict[rand_key]
+    # training set = full set - test set
+    training_set = {k: full_user_tweets_dict[k] for k in full_user_tweets_dict if k not in test_set}
+    return {'test': test_set, 'training': training_set}
 
 
 def _perform_face_recognition(res, tweet_json):
