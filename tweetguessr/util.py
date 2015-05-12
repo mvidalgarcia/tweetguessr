@@ -1,6 +1,7 @@
 import unicodedata
 import re
 import os
+import math
 from lib.facepp import API
 
 current_path = os.path.dirname(__file__)
@@ -92,5 +93,29 @@ def gender_by_profile_image(url_image):
     return res
 
 
+def root_log_likelihood_ratio(a, b, c, d):
+    """
+    This implementation is based on LLR interpretation provided in the following
+    paper (see table and equations in page 7): *
+    Java, Akshay, et al. "Why we twitter: understanding microblogging usage and
+    communities." Proceedings of the 9th WebKDD and 1st SNA-KDD 2007 workshop on
+    Web mining and social network analysis. ACM, 2007.
+    Available at: http://aisl.umbc.edu/resources/369.pdf *
+    :param a: frequency of token of interest in dataset A
+    :param b: frequency of token of interest in dataset B
+    :param c: total number of observations in dataset A
+    :param d: total number of observations in dataset B
+    :return: LLR value
+    """
+    e1 = c * (a + b) / (c + d)
+    e2 = d * (a + b) / (c + d)
+    # To avoid a division by 0 if a or b equal 0 they are replaced by 1
+    result = 2 * (a * math.log(a / e1 + (1 if a == 0 else 0)) + b * math.log(b / e2 + (1 if b == 0 else 0)))
+    result = math.sqrt(result)
+    if a / c < b / d:
+        result = -result
+    return result
+
+
 if __name__ == "__main__":
-    print(delete_urls('Today www.google.com gives a speech'))
+    print(root_log_likelihood_ratio(2, 0, 56, 35))
