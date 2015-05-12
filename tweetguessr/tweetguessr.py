@@ -82,7 +82,7 @@ def generate_male_female_sets(face_recognition=False):
                     print('Writing line {} ...'.format(count_feedback))
 
         # Get number of tweets of each user (just for testing!)
-        # _get_and_store_num_tweets(male_full_user_tweets_dict, female_full_user_tweets_dict)
+        #_get_and_store_num_tweets(male_full_user_tweets_dict, female_full_user_tweets_dict)
 
         male_num_users = len(male_full_user_tweets_dict)
         female_num_users = len(female_full_user_tweets_dict)
@@ -94,12 +94,22 @@ def generate_male_female_sets(face_recognition=False):
         print('{} = {} + {}'.format(male_num_users, training_male_len, test_male_len))
         # Obtain fe/male test (20%) and training (80%) sets
         male_sets = _get_test_training_sets(male_full_user_tweets_dict, test_male_len)
+        male_test = male_sets['test']
         print(male_sets['test'])
-        print(male_sets['training'])
+        male_training = male_sets['training']
+        print(male_training)
         print('{} = {} + {}'.format(female_num_users, training_female_len, test_female_len))
         female_sets = _get_test_training_sets(female_full_user_tweets_dict, test_female_len)
-        print(female_sets['test'])
-        print(female_sets['training'])
+        female_test = female_sets['test']
+        print(female_test)
+        female_training = female_sets['training']
+        print(female_training)
+        # TODO normalizador
+        # Delete stopwords
+        print('----')
+        for user_tweets in male_training.values():
+            for tweet in user_tweets:
+                print(normalise(tweet))  # normalise tweet text
 
 
 def _get_test_training_sets(full_user_tweets_dict, test_len):
@@ -140,13 +150,13 @@ def _get_and_store_num_tweets(male_full_user_tweets_dict, female_full_user_tweet
     :return: Dict of both male and female number of tweets per user
     """
     male_user_num_tweets = _get_user_num_tweets(male_full_user_tweets_dict, gender='male')
-    sorted_male_user_num_tweets = _write_file_user_num_tweets(male_user_num_tweets, gender='male')
+    #sorted_male_user_num_tweets = _write_file_user_num_tweets(male_user_num_tweets, gender='male')
 
     female_user_num_tweets = _get_user_num_tweets(female_full_user_tweets_dict, gender='female')
-    sorted_female_user_num_tweets = _write_file_user_num_tweets(female_user_num_tweets, gender='female')
+    #sorted_female_user_num_tweets = _write_file_user_num_tweets(female_user_num_tweets, gender='female')
 
-    return {'sorted_male_user_num_tweets': sorted_male_user_num_tweets,
-            'sorted_female_user_num_tweets': sorted_female_user_num_tweets}
+    #return {'sorted_male_user_num_tweets': sorted_male_user_num_tweets,
+    #        'sorted_female_user_num_tweets': sorted_female_user_num_tweets}
 
 
 def _get_user_num_tweets(full_user_tweets_dict, gender):

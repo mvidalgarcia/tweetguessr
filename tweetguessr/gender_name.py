@@ -61,7 +61,8 @@ class GenderName:
         :return: gender of the given fullname and confidence
         """
         # Lower case and strip accents and punctuation
-        fullname_stripped = strip_punctuation(strip_accents(fullname.lower()))
+        fullname_stripped = remove_punctuation(remove_accents(fullname.lower()))
+        #fullname_stripped = fullname.lower()
         fullname_list = fullname_stripped.split()
         result = dict()
         result['fullname_given'] = fullname
@@ -142,7 +143,6 @@ class GenderName:
             item = fullname_list[index]
             surnames.append(item)
 
-
     def _add_valid_surname(self, word, result, surnames):
         """
         check if word is a valid surname
@@ -164,11 +164,13 @@ class GenderName:
         Gets gender and confidence based on firstname
         :param firstname: variable to store first name
         :param result: dict of results
-        :return:
+        :return: result
         """
-        firstname_str = ' '.join(firstname)
-        name_confidence_male = self.__names[firstname_str] \
-            if firstname_str in self.__names else 'unknown'
+        str_firstname = ' '.join(firstname)
+        if str_firstname in self.__names:
+            name_confidence_male = self.__names[str_firstname]
+        else:
+            name_confidence_male = 'unknown'
         if name_confidence_male == 'unknown':
             result['gender'] = 'unknown'
             return result
