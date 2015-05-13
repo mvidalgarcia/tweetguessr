@@ -3,8 +3,9 @@ import os
 import collections
 import argparse
 import datetime
-from random import randint
 import operator
+from random import randint
+from pprint import pprint
 from gender_name import GenderName
 from util import *
 
@@ -245,11 +246,12 @@ def perform_tests(lexicon, male_test, female_test, args):
     print("Males:\n\tRecall: {}\tPrecision: {}".format(recall_males, precision_males))
     print("Females:\n\tRecall: {}\tPrecision: {}".format(recall_females, precision_females))
 
-    # Write results in file
-    with open(current_path + '/data/result_tests.tsv', 'a') as f:
-        f.write("# time:{} args:{}\n".format(datetime.datetime.now(), args))
-        f.write("m_rec\t{}\nm_pre\t{}\n".format(recall_males, precision_males))
-        f.write("f_rec\t{}\nf_pre\t{}\n\n".format(recall_females, precision_females))
+    if args['write_results']:
+        # Write results in file
+        with open(current_path + '/data/result_tests.tsv', 'a') as f:
+            f.write("# time:{} args:{}\n".format(datetime.datetime.now(), ordered_args(args)))
+            f.write("m_rec\t{}\nm_pre\t{}\n".format(recall_males, precision_males))
+            f.write("f_rec\t{}\nf_pre\t{}\n\n".format(recall_females, precision_females))
 
 
 def perform_test(lexicon, test_set, gender):
@@ -285,6 +287,8 @@ def perform_test(lexicon, test_set, gender):
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Guess gender of tweets in a dataset')
+    parser.add_argument('--write-results', action='store_true',
+                        help='write results in .tsv file (default: No)')
     parser.add_argument('--face-recognition', action='store_true',
                         help='perform face recognition with facepp (default: No)')
     parser.add_argument('--min-conf', type=float, metavar='N', default=0.75,
@@ -294,13 +298,21 @@ def parse_arguments():
     return parser.parse_args()
 
 
+def ordered_args(args):
+    oargs = ''
+    for k in sorted(args):
+        oargs += '{}={} '.format(k, args[k])
+    return oargs
+
+
 def main():
     args = vars(parse_arguments())
-    print('Config:', args)
-    male_tweets_dict, female_tweets_dict = classify_tweets(args['face_recognition'], args['min_conf'])
-    sets = generate_sets(male_tweets_dict, female_tweets_dict, percentage_test=0.2)
-    lexicon = build_lexicon(sets['male_training'], sets['female_training'], args['llr_threshold'])
-    perform_tests(lexicon, sets['male_test'], sets['female_test'], args)
+    print('Config selected: ', end='')
+    print(ordered_args(args))
+    #male_tweets_dict, female_tweets_dict = classify_tweets(args['face_recognition'], args['min_conf'])
+    #sets = generate_sets(male_tweets_dict, female_tweets_dict, percentage_test=0.2)
+    #lexicon = build_lexicon(sets['male_training'], sets['female_training'], args['llr_threshold'])
+    #perform_tests(lexicon, sets['male_test'], sets['female_test'], args)
 
 
 if __name__ == "__main__":
