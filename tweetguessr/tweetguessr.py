@@ -159,12 +159,12 @@ class TweetGuessr:
         :param tweet_json:
         :return:
         """
-        if res['gender'] == 'unknown':
-            profile_image = tweet_json['user']['profile_image_url'].replace('_normal', '')
-            face = self.util.gender_by_profile_image(profile_image)
-            if face is not None and face['confidence'] > 90:
-                res['gender'] = face['gender']
-                res['confidence'] = face['confidence'] / 100
+
+        profile_image = tweet_json['user']['profile_image_url'].replace('_normal', '')
+        face = self.util.gender_by_profile_image(profile_image)
+        if face is not None and face['confidence'] > 90:
+            res['gender'] = face['gender']
+            res['confidence'] = face['confidence'] / 100
 
     def _write_table_file(self, male_female_file, screen_name, res, tweet_text):
         line = '\t'.join([screen_name, res['gender'], str(res['confidence']), tweet_text])

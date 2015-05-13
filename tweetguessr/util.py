@@ -50,11 +50,11 @@ class Util:
         Dictionary format: url_profile_photo \t confidence (conf > 0 -> male, conf < 0 -> female)
         :return:
         """
-        with open(FACEPP_CACHE_PATH, 'r') as file:
+        with open(FACEPP_CACHE_PATH, 'r+') as file:
             for line in file:
                 line_lst = line.split('\t')
                 if len(line_lst) == 2:
-                    self.facepp_cache[line_lst[0]] = line_lst[1]
+                    self.facepp_cache[line_lst[0]] = float(line_lst[1])
 
     def remove_stopwords(self, s):
         return ' '.join(word for word in s.split() if word not in self.stopwords)
@@ -97,16 +97,40 @@ class Util:
         :param url_image: Image url to analyse
         :return: dict of gender and confidence if there's just one face, None in other cases.
         """
-        res = None
-        api = API(API_KEY, API_SECRET)
-        try:
-            face = api.detection.detect(url=url_image)
-        except Exception:
-            return res
+        if url_image not in self.facepp_cache:
+            res = None
+            api = API(API_KEY, API_SECRET)
+            try:
+                face = api.detection.detect(url=url_image)
+            except Exception:
+                with open(FACEPP_CACHE_PATH, 'a+') as file:
+                    line = '\t'.join([url_image, '0'])
+                    file.write("%s\n" % line)
+                return res
 
-        if len(face['face']) == 1:
-            res = {'gender': face['face'][0]['attribute']['gender']['value'].lower(),
-                   'confidence': face['face'][0]['attribute']['gender']['confidence']}
+            if len(face['face']) == 1:
+                # Save result when one face is found
+                gender = face['face'][0]['attribute']['gender']['value'].lower()
+                confidence = face['face'][0]['attribute']['gender']['confidence']
+                res = {'gender': gender, 'confidence': confidence}
+                with open(FACEPP_CACHE_PATH, 'a+') as file:
+                    line = '\t'.join([url_image, str(confidence) if gender == 'male' else str(-confidence)])
+                    file.write("%s\n" % line)
+
+            else:
+                with open(FACEPP_CACHE_PATH, 'a+') as file:
+                    line = '\t'.join([url_image, '0'])
+                    file.write("%s\n" % line)
+        else:
+            # Load gender and confidence from cache
+            if self.facepp_cache[url_image] < 0:
+                gender = 'female'
+                confidence = abs(self.facepp_cache[url_image])
+            else:
+                gender = 'male'
+                confidence = self.facepp_cache[url_image]
+            res = {'gender': gender, 'confidence': confidence}
+
         return res
 
     def root_log_likelihood_ratio(self, a, b, c, d):
