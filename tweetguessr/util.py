@@ -84,9 +84,14 @@ class Util:
         :param url_image: Image url to analyse
         :return: dict of gender and confidence if there's just one face, None in other cases.
         """
-        api = API(API_KEY, API_SECRET)
-        face = api.detection.detect(url=url_image)
         res = None
+        api = API(API_KEY, API_SECRET)
+        try:
+            face = api.detection.detect(url=url_image)
+            print(url_image)
+        except Exception:
+            return res
+
         if len(face['face']) == 1:
             res = {'gender': face['face'][0]['attribute']['gender']['value'].lower(),
                    'confidence': face['face'][0]['attribute']['gender']['confidence']}

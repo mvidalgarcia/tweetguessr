@@ -32,7 +32,7 @@ def classify_tweets(face_recognition=False, min_confidence=0.75):
             screen_name = tweet_json['user']['screen_name']
             name = tweet_json['user']['name']
             res = gender_name.get_gender_by_fullname(name)
-            if face_recognition:
+            if face_recognition and res['gender'] == 'unknown':
                 # lazy evaluation, if cannot get gender by name, try to get it by face recognition
                 _perform_face_recognition(res, tweet_json)
             # Already have all gender results, build table
