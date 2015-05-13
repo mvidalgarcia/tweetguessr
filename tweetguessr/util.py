@@ -10,17 +10,20 @@ API_KEY = '7e4592c4251cbfeff378bb585cc60c6e'
 API_SECRET = 'DK1zSC6_vjhQL8ihl7b_h16mp-ZnEXHL'
 
 STOPWORDS_PATH = current_path + '/data/stopwords.data'
+FACEPP_CACHE_PATH = current_path + '/data/facepp_cache.tsv'
 
 
 class Util:
     """
     Auxiliar functions
     """
-
     stopwords = set()
+    facepp_cache = dict()
 
-    def __init__(self):
-        self.stopwords = self.load_stopwords()
+    def __init__(self, face_recognition=False):
+        self.load_stopwords()
+        if face_recognition:
+            self.load_facepp_cache()
 
     def remove_accents(self, s):
         l_norm = []
@@ -34,14 +37,24 @@ class Util:
         return re.sub(r'[^\w]', ' ', s)
 
     def load_stopwords(self):
-        self.stopwords = set()
         with open(STOPWORDS_PATH) as file:
             for line in file:
                 line_lst = line.split('|')
                 stop_word = line_lst[0].strip()
                 if stop_word:
                     self.stopwords.add(stop_word)
-        return self.stopwords
+
+    def load_facepp_cache(self):
+        """
+        Load facepp image cache in a dictionary
+        Dictionary format: url_profile_photo \t confidence (conf > 0 -> male, conf < 0 -> female)
+        :return:
+        """
+        with open(FACEPP_CACHE_PATH, 'r') as file:
+            for line in file:
+                line_lst = line.split('\t')
+                if len(line_lst) == 2:
+                    self.facepp_cache[line_lst[0]] = line_lst[1]
 
     def remove_stopwords(self, s):
         return ' '.join(word for word in s.split() if word not in self.stopwords)
@@ -95,7 +108,6 @@ class Util:
             res = {'gender': face['face'][0]['attribute']['gender']['value'].lower(),
                    'confidence': face['face'][0]['attribute']['gender']['confidence']}
         return res
-
 
     def root_log_likelihood_ratio(self, a, b, c, d):
         """
