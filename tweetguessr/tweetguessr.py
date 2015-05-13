@@ -1,6 +1,8 @@
 import json
 import os
 import collections
+import argparse
+import datetime
 from random import randint
 import operator
 from gender_name import GenderName
@@ -37,9 +39,9 @@ def classify_tweets(face_recognition=False, min_confidence=0.75):
     with open(TWEETS_PATH) as file:
         content = file.readlines()
         count_feedback = 1  # Count to show feedback while writing
-        #for _ in range(0, 100):
+        # for _ in range(0, 100):
         for tweet in content:
-           # tweet = content[randint(0, len(content)-1)]
+            # tweet = content[randint(0, len(content)-1)]
             tweet_json = json.loads(tweet)
             screen_name = tweet_json['user']['screen_name']
             name = tweet_json['user']['name']
@@ -65,8 +67,8 @@ def classify_tweets(face_recognition=False, min_confidence=0.75):
                 if count_feedback % 10000 == 0:
                     print('\tWriting tweet line {} ...'.format(count_feedback))
 
-        # Get number of tweets of each user (just for testing!)
-        #_get_and_store_num_tweets(male_full_user_tweets_dict, female_full_user_tweets_dict)
+                    # Get number of tweets of each user (just for testing!)
+                    #_get_and_store_num_tweets(male_full_user_tweets_dict, female_full_user_tweets_dict)
 
     return male_full_user_tweets_dict, female_full_user_tweets_dict
 
@@ -87,7 +89,7 @@ def generate_sets(male_tweets_dict, female_tweets_dict, percentage_test):
 
     print('Generating male training and test sets...')
     male_test, male_training = _get_test_training_sets(male_tweets_dict, test_male_len)
-    #_print_sets_size_feedback(male_training, male_test, male_num_users, test_male_len, gender='Male')
+    # _print_sets_size_feedback(male_training, male_test, male_num_users, test_male_len, gender='Male')
     print('Generating female training and test sets...')
     female_test, female_training = _get_test_training_sets(female_tweets_dict, test_female_len)
     #_print_sets_size_feedback(female_training, female_test, female_num_users, test_female_len, gender='Female')
@@ -105,7 +107,7 @@ def build_lexicon(male_training, female_training, llr_threshold=0.5):
     print('Getting word frequencies...')
     # Get word frequencies
     male_words_freq, male_word_count = _get_word_freq(male_training)
-    #print(sorted(male_words_freq.items(), key=operator.itemgetter(1), reverse=True))
+    # print(sorted(male_words_freq.items(), key=operator.itemgetter(1), reverse=True))
     #print(male_word_count)
     female_words_freq, female_word_count = _get_word_freq(female_training)
     #print(sorted(female_words_freq.items(), key=operator.itemgetter(1), reverse=True))
@@ -117,8 +119,8 @@ def build_lexicon(male_training, female_training, llr_threshold=0.5):
     print('Building lexicon...')
     for word in all_words:
         #if 500 < male_words_freq[word] < 2000:  # TODO: Reconsider this doing it better
-            lexicon[word] = root_log_likelihood_ratio(male_words_freq[word], female_words_freq[word],
-                                                      male_word_count, female_word_count)
+        lexicon[word] = root_log_likelihood_ratio(male_words_freq[word], female_words_freq[word],
+                                                  male_word_count, female_word_count)
     return _trim_lexicon(lexicon, llr_threshold)
 
 
@@ -160,7 +162,7 @@ def _print_sets_size_feedback(training_set, test_set, num_users, test_len, gende
 def _get_test_training_sets(full_user_tweets_dict, test_len):
     test_set = dict()
     while len(test_set) < test_len:
-        rand_key = list(full_user_tweets_dict.keys())[randint(0, len(full_user_tweets_dict)-1)]
+        rand_key = list(full_user_tweets_dict.keys())[randint(0, len(full_user_tweets_dict) - 1)]
         test_set[rand_key] = full_user_tweets_dict[rand_key]
     # training set = full set - test set
     training_set = {k: full_user_tweets_dict[k] for k in full_user_tweets_dict if k not in test_set}
@@ -179,7 +181,7 @@ def _perform_face_recognition(res, tweet_json):
         face = gender_by_profile_image(profile_image)
         if face is not None and face['confidence'] > 90:
             res['gender'] = face['gender']
-            res['confidence'] = face['confidence']/100
+            res['confidence'] = face['confidence'] / 100
 
 
 def _write_table_file(male_female_file, screen_name, res, tweet_text):
@@ -195,7 +197,7 @@ def _get_and_store_num_tweets(male_full_user_tweets_dict, female_full_user_tweet
     :return: Dict of both male and female number of tweets per user
     """
     male_user_num_tweets = _get_user_num_tweets(male_full_user_tweets_dict, gender='male')
-    #sorted_male_user_num_tweets = _write_file_user_num_tweets(male_user_num_tweets, gender='male')
+    # sorted_male_user_num_tweets = _write_file_user_num_tweets(male_user_num_tweets, gender='male')
 
     female_user_num_tweets = _get_user_num_tweets(female_full_user_tweets_dict, gender='female')
     #sorted_female_user_num_tweets = _write_file_user_num_tweets(female_user_num_tweets, gender='female')
@@ -236,13 +238,18 @@ def _write_file_user_num_tweets(user_num_tweets, gender):
     return sorted_user_num_tweets
 
 
-def perform_tests(lexicon, male_test, female_test):
-
+def perform_tests(lexicon, male_test, female_test, args):
     print('Performing tests...')
     recall_males, precision_males = perform_test(lexicon, male_test, 'male')
     recall_females, precision_females = perform_test(lexicon, female_test, 'female')
     print("Males:\n\tRecall: {}\tPrecision: {}".format(recall_males, precision_males))
     print("Females:\n\tRecall: {}\tPrecision: {}".format(recall_females, precision_females))
+
+    # Write results in file
+    with open(current_path + '/data/result_tests.tsv', 'a') as f:
+        f.write("# time:{} args:{}\n".format(datetime.datetime.now(), args))
+        f.write("m_rec\t{}\nm_pre\t{}\n".format(recall_males, precision_males))
+        f.write("f_rec\t{}\nf_pre\t{}\n\n".format(recall_females, precision_females))
 
 
 def perform_test(lexicon, test_set, gender):
@@ -276,11 +283,25 @@ def perform_test(lexicon, test_set, gender):
     return recall, precision
 
 
+def parse_arguments():
+    parser = argparse.ArgumentParser(description='Guess gender of tweets in a dataset')
+    parser.add_argument('--face-recognition', action='store_true',
+                        help='perform face recognition with facepp (default: No)')
+    parser.add_argument('--min-conf', type=float, metavar='N', default=0.75,
+                        help='minimum confidence in gender recognition (default 0.75)')
+    parser.add_argument('--llr-threshold', type=float, metavar='N', default=0.5,
+                        help='float for LLR threshold (default 0.5)')
+    return parser.parse_args()
+
+
 def main():
-    male_tweets_dict, female_tweets_dict = classify_tweets()
+    args = vars(parse_arguments())
+    print('Config:', args)
+    male_tweets_dict, female_tweets_dict = classify_tweets(args['face_recognition'], args['min_conf'])
     sets = generate_sets(male_tweets_dict, female_tweets_dict, percentage_test=0.2)
-    lexicon = build_lexicon(sets['male_training'], sets['female_training'], llr_threshold=0.5)
-    perform_tests(lexicon, sets['male_test'], sets['female_test'])
+    lexicon = build_lexicon(sets['male_training'], sets['female_training'], args['llr_threshold'])
+    perform_tests(lexicon, sets['male_test'], sets['female_test'], args)
+
 
 if __name__ == "__main__":
     main()
