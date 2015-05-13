@@ -1,10 +1,11 @@
 import os
-from util import *
+from util import Util
 
 API_KEY = '7e4592c4251cbfeff378bb585cc60c6e'
 API_SECRET = 'DK1zSC6_vjhQL8ihl7b_h16mp-ZnEXHL'
 
 current_path = os.path.dirname(__file__)
+util = Util()
 
 
 class GenderName:
@@ -61,9 +62,8 @@ class GenderName:
         :return: gender of the given fullname and confidence
         """
         # Lower case and strip accents and punctuation
-        fullname_stripped = remove_punctuation(remove_accents(fullname.lower()))
-        #fullname_stripped = fullname.lower()
-        fullname_list = fullname_stripped.split()
+        fullname_normalised = util.normalise(fullname, ['accents', 'punctuation'])
+        fullname_list = fullname_normalised.split()
         result = dict()
         result['fullname_given'] = fullname
         if len(fullname_list) <= 1:

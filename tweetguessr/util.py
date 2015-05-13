@@ -20,7 +20,7 @@ class Util:
     stopwords = set()
 
     def __init__(self):
-        self.stop_words = self.load_stopwords()
+        self.stopwords = self.load_stopwords()
 
     def remove_accents(self, s):
         l_norm = []
@@ -65,8 +65,8 @@ class Util:
         return ' '.join(s.split())
 
     def normalise(self, s, options=None):
+        s = s.lower()
         if options is None:
-            s = s.lower()
             options = ['stopwords', 'accents', 'urls', 'twitter_mentions', 'punctuation']
             # options = []
 
@@ -76,7 +76,6 @@ class Util:
 
         for opt in options:
             s = functions[opt](s)
-
         return s
 
     def gender_by_profile_image(self, url_image):
@@ -119,4 +118,5 @@ class Util:
 
 if __name__ == "__main__":
     util = Util()
-    print(util.remove_stopwords('@juan Hola jesus@pepe.es que tal'.lower()))
+    print(util.normalise('@juan Hola jesus@pepe.es que tal'.lower()))
+    print(util.normalise("Jose Luis", ['accents', 'punctuation']))

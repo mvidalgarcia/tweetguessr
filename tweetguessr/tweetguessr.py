@@ -7,7 +7,7 @@ import operator
 from random import randint
 from pprint import pprint
 from gender_name import GenderName
-from util import *
+from util import Util
 
 current_path = os.path.dirname(__file__)
 TWEETS_PATH = current_path + '/data/geolocated_asturias.json'
@@ -15,22 +15,7 @@ SAMPLE_PATH = current_path + '/data/sample.json'
 MALE_TABLE_PATH = current_path + '/data/male_table.data'
 FEMALE_TABLE_PATH = current_path + '/data/female_table.data'
 gender_name = GenderName()
-
-'''
-print(obj.get_gender_by_fullname('Marco Antonio Vidal García'))
-print(obj.get_gender_by_fullname('Jose Maria Gutiérrez Calleja'))
-print(obj.get_gender_by_fullname('Bienvenido Pérez'))
-print(obj.get_gender_by_fullname('Kevin José de la Rosa Pérez'))
-print(obj.get_gender_by_fullname('Fernando Móntañes'))
-print(obj.get_gender_by_fullname('Jose Ramón'))
-print(obj.get_gender_by_fullname('Pepe Juan'))
-print(obj.get_gender_by_fullname('Petra Z. Ral'))
-print(obj.get_gender_by_fullname('Andrea Fernandez♥'))
-print(obj.get_gender_by_fullname('María José Fernández Andetxaga'))
-print(obj.get_gender_by_fullname('María José de la rosa perez'))
-print(obj.get_gender_by_fullname('Javier Alvarez-Buylla Escobar'))
-print(obj.get_gender_by_fullname('Isa Noval'))
-'''
+util = Util()
 
 
 def classify_tweets(face_recognition=False, min_confidence=0.75):
@@ -40,7 +25,7 @@ def classify_tweets(face_recognition=False, min_confidence=0.75):
     with open(TWEETS_PATH) as file:
         content = file.readlines()
         count_feedback = 1  # Count to show feedback while writing
-        # for _ in range(0, 100):
+        # for _ in range(0, 1):
         for tweet in content:
             # tweet = content[randint(0, len(content)-1)]
             tweet_json = json.loads(tweet)
@@ -49,7 +34,7 @@ def classify_tweets(face_recognition=False, min_confidence=0.75):
             res = gender_name.get_gender_by_fullname(name)
             if face_recognition:
                 # lazy evaluation, if cannot get gender by name, try to get it by face recognition
-                perform_face_recognition(res, tweet_json)
+                util.perform_face_recognition(res, tweet_json)
             # Already have all gender results, build table
             if res['gender'] != 'unknown':
                 tweet_text = tweet_json['text']
@@ -120,7 +105,7 @@ def build_lexicon(male_training, female_training, llr_threshold=0.5):
     print('Building lexicon...')
     for word in all_words:
         #if 500 < male_words_freq[word] < 2000:  # TODO: Reconsider this doing it better
-        lexicon[word] = root_log_likelihood_ratio(male_words_freq[word], female_words_freq[word],
+        lexicon[word] = util.root_log_likelihood_ratio(male_words_freq[word], female_words_freq[word],
                                                   male_word_count, female_word_count)
     return _trim_lexicon(lexicon, llr_threshold)
 
@@ -145,7 +130,7 @@ def _get_word_freq(training_set):
     word_count = 0
     for user_tweets in training_set.values():
         for tweet in user_tweets:
-            for word in normalise(tweet).split():  # normalise tweet text
+            for word in util.normalise(tweet).split():  # normalise tweet text
                 words_freq[word] += 1
                 word_count += 1
     return words_freq, word_count
@@ -179,7 +164,7 @@ def _perform_face_recognition(res, tweet_json):
     """
     if res['gender'] == 'unknown':
         profile_image = tweet_json['user']['profile_image_url'].replace('_normal', '')
-        face = gender_by_profile_image(profile_image)
+        face = util.gender_by_profile_image(profile_image)
         if face is not None and face['confidence'] > 90:
             res['gender'] = face['gender']
             res['confidence'] = face['confidence'] / 100
@@ -266,9 +251,18 @@ def perform_test(lexicon, test_set, gender):
     male_tweets, female_tweets, unclassified = 0, 0, 0
     for user_tweets in test_set.values():
         for tweet in user_tweets:
-            male_words, female_words = 0, 0
-            for word in normalise(tweet).split():  # normalise tweet text
+            male_words, female_words, llr_accumulated = 0, 0, 0
+            for word in util.normalise(tweet).split():  # normalise tweet text
                 if word in lexicon:
+            #         llr_accumulated += lexicon[word]
+            #         print(word, lexicon[word])
+            # print(llr_accumulated)
+            # if llr_accumulated > 0:
+            #     male_tweets += 1
+            # elif llr_accumulated < 0:
+            #     female_tweets += 1
+            # else:
+            #     unclassified += 1
                     if lexicon[word] > 0:
                         male_words += 1
                     else:
@@ -280,8 +274,12 @@ def perform_test(lexicon, test_set, gender):
             else:
                 female_tweets += 1
     # Get results
-    recall = (male_tweets + female_tweets) / (male_tweets + female_tweets + unclassified)
-    precision = (male_tweets if gender is 'male' else female_tweets) / (male_tweets + female_tweets)
+    classified = male_tweets + female_tweets
+    recall = classified / (classified + unclassified)
+    if male_tweets + female_tweets == 0:
+        precision = 0.0
+    else:
+        precision = (male_tweets if gender is 'male' else female_tweets) / classified
     return recall, precision
 
 
@@ -301,18 +299,18 @@ def parse_arguments():
 def ordered_args(args):
     oargs = ''
     for k in sorted(args):
-        oargs += '{}={} '.format(k, args[k])
-    return oargs
+        oargs += '{}: {}, '.format(k, args[k])
+    return '{{{}}}'.format(oargs[:-2])
 
 
 def main():
     args = vars(parse_arguments())
     print('Config selected: ', end='')
     print(ordered_args(args))
-    #male_tweets_dict, female_tweets_dict = classify_tweets(args['face_recognition'], args['min_conf'])
-    #sets = generate_sets(male_tweets_dict, female_tweets_dict, percentage_test=0.2)
-    #lexicon = build_lexicon(sets['male_training'], sets['female_training'], args['llr_threshold'])
-    #perform_tests(lexicon, sets['male_test'], sets['female_test'], args)
+    male_tweets_dict, female_tweets_dict = classify_tweets(args['face_recognition'], args['min_conf'])
+    sets = generate_sets(male_tweets_dict, female_tweets_dict, percentage_test=0.2)
+    lexicon = build_lexicon(sets['male_training'], sets['female_training'], args['llr_threshold'])
+    perform_tests(lexicon, sets['male_test'], sets['female_test'], args)
 
 
 if __name__ == "__main__":
