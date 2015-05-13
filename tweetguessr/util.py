@@ -88,7 +88,6 @@ class Util:
         api = API(API_KEY, API_SECRET)
         try:
             face = api.detection.detect(url=url_image)
-            print(url_image)
         except Exception:
             return res
 
