@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 python3 tweetguessr/tweetguessr.py
 python3 tweetguessr/tweetguessr.py
 python3 tweetguessr/tweetguessr.py
