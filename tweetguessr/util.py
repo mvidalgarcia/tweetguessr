@@ -50,7 +50,9 @@ class Util:
         Dictionary format: url_profile_photo \t confidence (conf > 0 -> male, conf < 0 -> female)
         :return:
         """
-        with open(FACEPP_CACHE_PATH, 'r+') as file:
+        if not os.path.exists(FACEPP_CACHE_PATH):
+            open(FACEPP_CACHE_PATH, 'w').close()
+        with open(FACEPP_CACHE_PATH) as file:
             for line in file:
                 line_lst = line.split('\t')
                 if len(line_lst) == 2:
