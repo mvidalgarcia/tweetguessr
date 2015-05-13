@@ -37,9 +37,9 @@ def classify_tweets(face_recognition=False, min_confidence=0.75):
     with open(TWEETS_PATH) as file:
         content = file.readlines()
         count_feedback = 1  # Count to show feedback while writing
-        #for _ in range(0, 5000):
+        #for _ in range(0, 100):
         for tweet in content:
-            #tweet = content[randint(0, len(content)-1)]
+           # tweet = content[randint(0, len(content)-1)]
             tweet_json = json.loads(tweet)
             screen_name = tweet_json['user']['screen_name']
             name = tweet_json['user']['name']
@@ -52,18 +52,18 @@ def classify_tweets(face_recognition=False, min_confidence=0.75):
                 tweet_text = tweet_json['text']
                 if res['gender'] == 'male' and float(res['confidence']) >= min_confidence:
                     if screen_name not in male_full_user_tweets_dict:
-                        male_full_user_tweets_dict[screen_name] = [tweet_text]
+                        male_full_user_tweets_dict[screen_name] = {tweet_text}
                     else:
-                        male_full_user_tweets_dict[screen_name].append(tweet_text)
+                        male_full_user_tweets_dict[screen_name].add(tweet_text)
                     count_feedback += 1
                 elif res['gender'] == 'female' and float(res['confidence']) >= min_confidence:
                     if screen_name not in female_full_user_tweets_dict:
-                        female_full_user_tweets_dict[screen_name] = [tweet_text]
+                        female_full_user_tweets_dict[screen_name] = {tweet_text}
                     else:
-                        female_full_user_tweets_dict[screen_name].append(tweet_text)
+                        female_full_user_tweets_dict[screen_name].add(tweet_text)
                     count_feedback += 1
                 if count_feedback % 10000 == 0:
-                    print('Writing tweet line {} ...'.format(count_feedback))
+                    print('\tWriting tweet line {} ...'.format(count_feedback))
 
         # Get number of tweets of each user (just for testing!)
         #_get_and_store_num_tweets(male_full_user_tweets_dict, female_full_user_tweets_dict)
@@ -95,7 +95,7 @@ def generate_sets(male_tweets_dict, female_tweets_dict, percentage_test):
             'female_training': female_training, 'female_test': female_test}
 
 
-def build_lexicon(male_training, female_training):
+def build_lexicon(male_training, female_training, llr_threshold=0.5):
     """
     Builds lexicon from training sets using LLR function
     :param male_training:
@@ -116,12 +116,13 @@ def build_lexicon(male_training, female_training):
     lexicon = dict()
     print('Building lexicon...')
     for word in all_words:
-        lexicon[word] = root_log_likelihood_ratio(male_words_freq[word], female_words_freq[word],
-                                                  male_word_count, female_word_count)
-    return _trim_lexicon(lexicon)
+        #if 500 < male_words_freq[word] < 2000:  # TODO: Reconsider this doing it better
+            lexicon[word] = root_log_likelihood_ratio(male_words_freq[word], female_words_freq[word],
+                                                      male_word_count, female_word_count)
+    return _trim_lexicon(lexicon, llr_threshold)
 
 
-def _trim_lexicon(lexicon, threshold=0.5):
+def _trim_lexicon(lexicon, threshold):
     """
     Keep just the most meaningful terms. Those >= 0.5 or <= -0.5
     :param lexicon: initial lexicon
@@ -246,12 +247,13 @@ def perform_tests(lexicon, male_test, female_test):
 
 def perform_test(lexicon, test_set, gender):
     """
-
+    Calculates recall and precision from test_set
     :param lexicon:
     :param test_set:
     :param gender:
-    :return:
+    :return: recall and precision
     """
+    # TODO: Consider accumulate LLR in a variable
     male_tweets, female_tweets, unclassified = 0, 0, 0
     for user_tweets in test_set.values():
         for tweet in user_tweets:
@@ -277,7 +279,7 @@ def perform_test(lexicon, test_set, gender):
 def main():
     male_tweets_dict, female_tweets_dict = classify_tweets()
     sets = generate_sets(male_tweets_dict, female_tweets_dict, percentage_test=0.2)
-    lexicon = build_lexicon(sets['male_training'], sets['female_training'])
+    lexicon = build_lexicon(sets['male_training'], sets['female_training'], llr_threshold=0.5)
     perform_tests(lexicon, sets['male_test'], sets['female_test'])
 
 if __name__ == "__main__":

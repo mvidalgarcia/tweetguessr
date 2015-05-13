@@ -50,7 +50,7 @@ def remove_twitter_mentions(s):
     :param s:
     :return:
     """
-    s = re.sub(r'(?<=\W)[@]\S*', '', s)
+    s = re.sub(r'(?:[@])\S+', '', s)
     return " ".join(s.split())
 
 
@@ -67,10 +67,11 @@ def remove_urls(s):
 def normalise(s, options=None):
     if options is None:
         s = s.lower()
-        options = ['accents', 'urls', 'punctuation', 'stopwords']
+        options = ['accents', 'urls', 'twitter_mentions', 'punctuation', 'stopwords']
 
     functions = {'accents': remove_accents, 'punctuation': remove_punctuation,
-                 'urls': remove_urls, 'stopwords': remove_stopwords}
+                 'urls': remove_urls, 'stopwords': remove_stopwords,
+                 'twitter_mentions': remove_twitter_mentions}
 
     for opt in options:
         s = functions[opt](s)
@@ -116,6 +117,5 @@ def root_log_likelihood_ratio(a, b, c, d):
         result = -result
     return result
 
-
 if __name__ == "__main__":
-    print(root_log_likelihood_ratio(2, 0, 56, 35))
+    print(normalise('@juan Hola jesus@pepe.es que tal'))
