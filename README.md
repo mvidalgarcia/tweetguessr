@@ -1,4 +1,5 @@
 # tweetguessr
+Python app which tries to guess the gender of a person who wrote a given tweet (written in Spanish).
 
 ## Install
 
