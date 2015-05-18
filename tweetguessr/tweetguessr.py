@@ -5,8 +5,8 @@ import argparse
 import datetime
 import operator
 from random import randint
-from gender_name import GenderName
-from util import Util
+from tweetguessr.gender_name import GenderName
+from tweetguessr.util import Util
 
 current_path = os.path.dirname(__file__)
 TWEETS_PATH = current_path + '/data/geolocated_asturias.json'
@@ -292,7 +292,7 @@ class TweetGuessr:
             oargs += '{}: {}, '.format(k, args[k])
         return '{{{}}}'.format(oargs[:-2])
 
-    def main(self):
+    def main(self, args):
         self.args = args
         print('Config selected: ', end='')
         print(self.ordered_args(self.args))
@@ -301,8 +301,3 @@ class TweetGuessr:
         lexicon = self.build_lexicon(sets['male_training'], sets['female_training'], self.args['llr_threshold'])
         self.perform_tests(lexicon, sets['male_test'], sets['female_test'])
 
-
-if __name__ == "__main__":
-    args = vars(TweetGuessr.parse_arguments())
-    tweetguessr = TweetGuessr(args)
-    tweetguessr.main()

@@ -2,7 +2,7 @@ import unicodedata
 import re
 import os
 import math
-from lib.facepp import API
+from tweetguessr.lib.facepp import API
 
 current_path = os.path.dirname(__file__)
 
